@@ -3,10 +3,6 @@
 ![InstagramMediaBatchDownloader](https://github.com/user-attachments/assets/e651f008-5516-4fb2-bb35-cd1a10027193)
 
 <div align="center">
-<h2>⚠️ In development and coming soon.</h2>
-</div>
-
-<div align="center">
 <b>Instagram Media Batch Downloader</b> is a GUI tool that allows users to download all media, including images and videos, in their original quality from Instagram accounts using <code>gallery-dl</code>
 </div>
 
