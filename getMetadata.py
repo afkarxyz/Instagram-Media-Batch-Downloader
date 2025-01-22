@@ -34,6 +34,20 @@ def get_proxy_list():
     except:
         return None, None
 
+def filter_profile_data(profile_data):
+    try:
+        filtered_data = {
+            "name": profile_data.get("username", ""),
+            "nick": profile_data.get("full_name", ""),
+            "followers_count": profile_data.get("edge_followed_by", {}).get("count", 0),
+            "friends_count": profile_data.get("edge_follow", {}).get("count", 0),
+            "profile_image": profile_data.get("profile_pic_url_hd", ""),
+            "statuses_count": profile_data.get("edge_owner_to_timeline_media", {}).get("count", 0)
+        }
+        return filtered_data
+    except Exception as e:
+        return {"error": f"Failed to filter profile data: {str(e)}"}
+
 def get_profile_json(username):
     proxies, proxy_type = get_proxy_list()
     if not proxies:
@@ -74,8 +88,8 @@ def get_profile_json(username):
                     if profile_data is None:
                         continue
                     
-                    sorted_data = dict(sorted(profile_data.items()))
-                    return sorted_data
+                    filtered_data = filter_profile_data(profile_data)
+                    return filtered_data
                 except:
                     continue
             elif response.status_code == 404:
