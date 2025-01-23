@@ -86,7 +86,7 @@ def get_profile_json(username):
     return {"error": "Failed to fetch profile data with available proxies"}
 
 if __name__ == "__main__":
-    username = "takomayuyi"
+    username = ""
     result = get_profile_json(username)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     output_path = os.path.join(current_dir, f"{username}.json")
