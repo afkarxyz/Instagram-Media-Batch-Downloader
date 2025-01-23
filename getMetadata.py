@@ -42,7 +42,8 @@ def filter_profile_data(profile_data):
             "followers_count": profile_data.get("edge_followed_by", {}).get("count", 0),
             "friends_count": profile_data.get("edge_follow", {}).get("count", 0),
             "profile_image": profile_data.get("profile_pic_url_hd", ""),
-            "statuses_count": profile_data.get("edge_owner_to_timeline_media", {}).get("count", 0)
+            "statuses_count": profile_data.get("edge_owner_to_timeline_media", {}).get("count", 0),
+            "is_private": profile_data.get("is_private", False)
         }
         return filtered_data
     except Exception as e:
@@ -100,7 +101,7 @@ def get_profile_json(username):
     return {"error": "Failed to fetch profile data with available proxies"}
 
 if __name__ == "__main__":
-    username = "takomayuyi"
+    username = ""
     result = get_profile_json(username)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     output_path = os.path.join(current_dir, f"{username}.json")
