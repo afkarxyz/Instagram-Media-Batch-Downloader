@@ -220,6 +220,11 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.name_label.setWordWrap(True)
         self.name_label.setMinimumWidth(400)
         
+        self.privacy_status_label = QLabel()
+        self.privacy_status_label.setStyleSheet("font-size: 12px;")
+        self.privacy_status_label.setWordWrap(True)
+        self.privacy_status_label.setMinimumWidth(400)
+        
         self.followers_label = QLabel()
         self.followers_label.setStyleSheet("font-size: 12px;")
         self.followers_label.setWordWrap(True)
@@ -236,6 +241,7 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.posts_label.setMinimumWidth(400)
 
         profile_details_layout.addWidget(self.name_label)
+        profile_details_layout.addWidget(self.privacy_status_label)
         profile_details_layout.addWidget(self.followers_label)
         profile_details_layout.addWidget(self.following_label)
         profile_details_layout.addWidget(self.posts_label)
@@ -366,22 +372,25 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         
         name = info['name']
         nick = info['nick']
+        is_private = info.get('is_private', False)
+        privacy_status = "Private" if is_private else "Public"
         followers = info['followers_count']
         following = info['friends_count']
         posts = info['statuses_count']
         
         self.name_label.setText(f"<b>{name}</b> ({nick})")
+        self.privacy_status_label.setText(f"<b>Status:</b> {privacy_status}")
         self.followers_label.setText(f"<b>Followers:</b> {followers:,}")
         self.following_label.setText(f"<b>Following:</b> {following:,}")
         self.posts_label.setText(f"<b>Posts:</b> {posts:,}")
 
         self.status_label.setText(f"Successfully fetched {posts:,} media items")
-        
+
         profile_image_url = info['profile_image']
         self.image_downloader = ImageDownloader(profile_image_url)
         self.image_downloader.finished.connect(self.update_profile_image)
         self.image_downloader.start()
-        
+
         self.input_widget.hide()
         self.profile_widget.show()
         self.download_button.show()
