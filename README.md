@@ -11,7 +11,7 @@
 > [!Warning]
 > If the download fails and the error `HttpError: '401 Unauthorized...'` appears in the console, please try downloading again.
 
-### [Download](https://github.com/afkarxyz/Instagram-Media-Batch-Downloader/releases/download/v1.0/InstagramMediaBatchDownloader.exe)
+### [Download](https://github.com/afkarxyz/Instagram-Media-Batch-Downloader/releases/download/v1.1/InstagramMediaBatchDownloader.exe)
 
 ## Features
 
@@ -23,8 +23,8 @@
   
 ## Screenshots
 
-![image](https://github.com/user-attachments/assets/e336a1f3-0204-4af2-8085-e40f89194e42)
+![image](https://github.com/user-attachments/assets/b11b87f0-d106-4c4a-b167-811825d590ff)
 
-![image](https://github.com/user-attachments/assets/215395b6-5990-4f0a-b173-790999e47253)
+![image](https://github.com/user-attachments/assets/c0caf06b-27fc-439f-84e4-32351e97d2b7)
 
-![image](https://github.com/user-attachments/assets/15f62b34-ce2a-4b1b-b359-4e2f890b807d)
+![image](https://github.com/user-attachments/assets/99ba1719-a495-4e9b-bcab-97fb4e0eea0e)
