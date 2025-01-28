@@ -1,17 +1,16 @@
 import sys
 import os
-import time
 import asyncio
 import aiohttp
 import subprocess
 from pathlib import Path
-from threading import Thread
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                             QHBoxLayout, QLabel, QLineEdit, QPushButton, 
-                            QProgressBar, QFileDialog, QRadioButton)
+                            QFileDialog, QRadioButton)
 from PyQt6.QtCore import QThread, pyqtSignal, Qt, QSettings
 from PyQt6.QtGui import QIcon, QPixmap, QCursor, QPainter, QPainterPath
-from getMetadata import get_profile_json
+from getMetadata import get_profile_data
+from gallery_dl import job, config
 
 class ImageDownloader(QThread):
     finished = pyqtSignal(bytes)
@@ -46,7 +45,7 @@ class MetadataFetcher(QThread):
             if "instagram.com/" in username:
                 username = username.split("/")[-2]
             
-            result = get_profile_json(username)
+            result = get_profile_data(username)
             
             if "error" in result:
                 raise ValueError(result["error"])
@@ -57,7 +56,6 @@ class MetadataFetcher(QThread):
             self.error.emit(str(e))
 
 class MediaDownloader(QThread):
-    progress = pyqtSignal(int, int)
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
     status_update = pyqtSignal(str)
@@ -71,6 +69,19 @@ class MediaDownloader(QThread):
         self.download_count = 0
         self.output_path = os.path.join(output_dir, username)
 
+    class OutputRedirector:
+        def __init__(self, callback, output_path):
+            self.callback = callback
+            self.output_path = output_path
+
+        def write(self, text):
+            current_total = len([f for f in os.listdir(self.output_path) 
+                               if os.path.isfile(os.path.join(self.output_path, f))]) if os.path.exists(self.output_path) else 0
+            self.callback(f"Downloaded {current_total} files... {text.strip()}")
+
+        def flush(self):
+            pass
+
     def count_downloaded_files(self):
         if os.path.exists(self.output_path):
             files = [f for f in os.listdir(self.output_path) if os.path.isfile(os.path.join(self.output_path, f))]
@@ -79,32 +90,25 @@ class MediaDownloader(QThread):
 
     def run(self):
         try:
-            from gallery_dl import job, config
-            
             config.set((), "directory", ["{username}"])
             config.set((), "base-directory", self.output_dir)
             config.set((), "filename", self.config_filename)
             
-            def check_progress():
-                while not self.isFinished():
-                    current_files = self.count_downloaded_files()
-                    self.progress.emit(current_files, self.total_posts)
-                    self.status_update.emit(f"Downloaded {current_files:,} of {self.total_posts:,} files...")
-                    time.sleep(1)
-
-            progress_thread = Thread(target=check_progress)
-            progress_thread.daemon = True
-            progress_thread.start()
+            original_stdout = sys.stdout
+            redirector = self.OutputRedirector(lambda text: self.status_update.emit(text.strip()), self.output_path)
+            sys.stdout = redirector
             
-            url = f"https://www.instagram.com/{self.username}/posts"
-            result = job.DownloadJob(url).run()
-            
-            if result == 0:
-                final_count = self.count_downloaded_files()
-                self.progress.emit(final_count, self.total_posts)
-                self.finished.emit(f"Download completed! Downloaded {final_count:,} files.")
-            else:
-                self.error.emit("Download failed")
+            try:
+                url = f"https://www.instagram.com/{self.username}/posts"
+                result = job.DownloadJob(url).run()
+                
+                if result == 0:
+                    final_count = self.count_downloaded_files()
+                    self.finished.emit(f"Downloaded {final_count} files...")
+                else:
+                    self.error.emit("Download failed")
+            finally:
+                sys.stdout = original_stdout
                 
         except Exception as e:
             self.error.emit(str(e))
@@ -136,10 +140,17 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.setCentralWidget(central_widget)
         self.main_layout = QVBoxLayout(central_widget)
         self.main_layout.setContentsMargins(10, 10, 10, 10)
+        self.main_layout.setSpacing(10)
+
+        content_area = QWidget()
+        content_area.setFixedHeight(120)
+        content_layout = QVBoxLayout(content_area)
+        content_layout.setContentsMargins(0, 0, 0, 0)
 
         self.input_widget = QWidget()
         input_layout = QVBoxLayout(self.input_widget)
         input_layout.setSpacing(10)
+        input_layout.setContentsMargins(0, 0, 0, 0)
 
         url_layout = QHBoxLayout()
         url_label = QLabel("Username/URL:")
@@ -190,7 +201,7 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         format_layout.addStretch()
         input_layout.addLayout(format_layout)
 
-        self.main_layout.addWidget(self.input_widget)
+        content_layout.addWidget(self.input_widget)
 
         self.profile_widget = QWidget()
         self.profile_widget.hide()
@@ -248,8 +259,17 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         profile_layout.addWidget(profile_details_container, stretch=1)
         profile_layout.addStretch()
 
-        self.main_layout.addWidget(self.profile_widget)
+        content_layout.addWidget(self.profile_widget)
+        
+        self.main_layout.addWidget(content_area)
 
+        self.main_layout.addStretch()
+
+        button_widget = QWidget()
+        button_widget.setFixedHeight(30)
+        button_layout = QHBoxLayout(button_widget)
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        
         self.download_button = QPushButton("Download")
         self.download_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.download_button.setFixedWidth(100)
@@ -268,22 +288,21 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.open_button.clicked.connect(self.open_output_directory)
         self.open_button.hide()
 
-        button_layout = QHBoxLayout()
         button_layout.addStretch()
         button_layout.addWidget(self.open_button)
         button_layout.addWidget(self.download_button)
         button_layout.addWidget(self.cancel_button)
         button_layout.addStretch()
-        self.main_layout.addLayout(button_layout)
 
-        self.progress_bar = QProgressBar()
-        self.progress_bar.hide()
-        self.main_layout.addWidget(self.progress_bar)
+        self.main_layout.addWidget(button_widget)
 
-        bottom_layout = QHBoxLayout()
+        status_widget = QWidget()
+        status_widget.setFixedHeight(20)
+        status_layout = QHBoxLayout(status_widget)
+        status_layout.setContentsMargins(0, 0, 0, 0)
         
         self.status_label = QLabel("")
-        bottom_layout.addWidget(self.status_label, stretch=1)
+        status_layout.addWidget(self.status_label, stretch=1)
         
         self.update_button = QPushButton()
         icon_path = os.path.join(os.path.dirname(__file__), "update.svg")
@@ -302,10 +321,9 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.update_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.update_button.setToolTip("Check for Updates")
         self.update_button.clicked.connect(self.open_update_page)
-        
-        bottom_layout.addWidget(self.update_button)
-        
-        self.main_layout.addLayout(bottom_layout)
+        status_layout.addWidget(self.update_button)
+
+        self.main_layout.addWidget(status_widget)
 
     def open_update_page(self):
         import webbrowser
@@ -379,12 +397,12 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         posts = info['statuses_count']
         
         self.name_label.setText(f"<b>{name}</b> ({nick})")
-        self.privacy_status_label.setText(f"<b>Status:</b> {privacy_status}")
+        self.privacy_status_label.setText(f"<b>Account Status:</b> {privacy_status}")
         self.followers_label.setText(f"<b>Followers:</b> {followers:,}")
         self.following_label.setText(f"<b>Following:</b> {following:,}")
         self.posts_label.setText(f"<b>Posts:</b> {posts:,}")
 
-        self.status_label.setText(f"Successfully fetched {posts:,} media items")
+        self.status_label.setText("Successfully fetched profile info...")
 
         profile_image_url = info['profile_image']
         self.image_downloader = ImageDownloader(profile_image_url)
@@ -431,8 +449,6 @@ class InstagramMediaDownloaderGUI(QMainWindow):
 
         self.download_button.hide()
         self.cancel_button.hide()
-        self.progress_bar.show()
-        self.progress_bar.setValue(0)
         self.status_label.setText("Starting download...")
 
         username = self.url_input.text().strip()
@@ -449,18 +465,12 @@ class InstagramMediaDownloaderGUI(QMainWindow):
 
         total_posts = self.media_info['statuses_count']
         self.worker = MediaDownloader(username, output_dir, config_filename, total_posts)
-        self.worker.progress.connect(self.update_progress)
         self.worker.finished.connect(self.download_finished)
         self.worker.error.connect(self.download_error)
         self.worker.status_update.connect(self.status_label.setText)
         self.worker.start()
 
-    def update_progress(self, current, total):
-        percentage = int((current / total) * 100) if total > 0 else 0
-        self.progress_bar.setValue(percentage)
-
     def download_finished(self, message):
-        self.progress_bar.hide()
         self.status_label.setText(message)
         self.open_button.show()
         self.download_button.setText("Clear")
@@ -476,8 +486,6 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.download_button.hide()
         self.cancel_button.hide()
         self.open_button.hide()
-        self.progress_bar.hide()
-        self.progress_bar.setValue(0)
         self.status_label.clear()
         self.media_info = None
         self.update_button.show()
@@ -487,7 +495,6 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.download_button.clicked.connect(self.start_download)
 
     def download_error(self, error_message):
-        self.progress_bar.hide()
         self.status_label.setText(f"Download error: {error_message}")
         self.download_button.setText("Retry")
         self.download_button.show()
@@ -499,8 +506,6 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.download_button.hide()
         self.cancel_button.hide()
         self.open_button.hide()
-        self.progress_bar.hide()
-        self.progress_bar.setValue(0)
         self.status_label.clear()
         self.media_info = None
         self.update_button.show()
