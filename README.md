@@ -9,7 +9,7 @@
 #
 
 > [!Warning]
-> - If the download fails and the error `HttpError: '401 Unauthorized...'` appears in the console, please try downloading again.
+> - If the download fails and the error `HttpError: '401 Unauthorized...'` appears, please try downloading it again.
 > - Media from private accounts cannot be downloaded.
 
 ### [Download](https://github.com/afkarxyz/Instagram-Media-Batch-Downloader/releases/download/v1.2/InstagramMediaBatchDownloader.exe)
@@ -29,4 +29,3 @@
 ![image](https://github.com/user-attachments/assets/7d6138b7-2e22-41f8-b35c-2a1c4ebdbb59)
 
 ![image](https://github.com/user-attachments/assets/cdcb6e58-d8ef-4e10-9b37-d1fe42de8fa3)
-
