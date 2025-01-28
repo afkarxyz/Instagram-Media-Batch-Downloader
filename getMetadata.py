@@ -49,7 +49,7 @@ def filter_profile_data(profile_data):
     except Exception as e:
         return {"error": f"Failed to filter profile data: {str(e)}"}
 
-def get_profile_json(username):
+def get_profile_data(username):
     proxies, proxy_type = get_proxy_list()
     if not proxies:
         return {"error": "Failed to get proxy list"}
@@ -101,8 +101,8 @@ def get_profile_json(username):
     return {"error": "Failed to fetch profile data with available proxies"}
 
 if __name__ == "__main__":
-    username = ""
-    result = get_profile_json(username)
+    username = "takomayuyi"
+    result = get_profile_data(username)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     output_path = os.path.join(current_dir, f"{username}.json")
     with open(output_path, "w", encoding="utf-8") as f:
