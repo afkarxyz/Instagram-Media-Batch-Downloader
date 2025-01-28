@@ -17,11 +17,9 @@
 ## Features
 
 - Uses the powerful `gallery-dl` library, similar to `yt-dlp`  
-- Simple and compact GUI
-- Does not require cookies
 - Download images and videos in original quality
-- Filename format customization
-  
+- Does not require cookies
+
 ## Screenshots
 
 ![image](https://github.com/user-attachments/assets/9f573fa3-ee27-4139-8a2b-843d0d0cc7d2)
