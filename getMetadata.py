@@ -10,29 +10,28 @@ def generate_tokens():
     return [x_csrftoken, x_asbd_id]
 
 def get_proxy_list():
-    db = "https://raw.githubusercontent.com/afkarxyz/Instagram-Media-Batch-Downloader/main/db/"
+    base_url = "https://raw.githubusercontent.com/afkarxyz/proxies/main/"
+    proxy_types = ["http", "https", "socks4", "socks5"]
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     }
     
-    db_proxy_list = db + "socks4"
-    proxy_type = "socks4"
+    all_proxies = []
     
-    try:
-        resp_all_proxy_lists = requests.get(db_proxy_list, headers=headers)
-        if resp_all_proxy_lists.status_code == 200:
-            all_proxy_lists = resp_all_proxy_lists.text.splitlines()
-            shuffle(all_proxy_lists)
-            
-            for proxy_list_url in all_proxy_lists:
-                resp_proxy_list = requests.get(proxy_list_url, headers=headers)
-                if resp_proxy_list.status_code == 200:
-                    proxy_list = resp_proxy_list.text.splitlines()
-                    return proxy_list, proxy_type
-                    
-        return None, None
-    except:
-        return None, None
+    for proxy_type in proxy_types:
+        try:
+            response = requests.get(f"{base_url}{proxy_type}", headers=headers)
+            if response.status_code == 200:
+                proxies = response.text.splitlines()
+                formatted_proxies = [(proxy, proxy_type) for proxy in proxies]
+                all_proxies.extend(formatted_proxies)
+        except:
+            continue
+    
+    if all_proxies:
+        shuffle(all_proxies)
+        return all_proxies
+    return None
 
 def filter_profile_data(profile_data):
     try:
@@ -50,7 +49,7 @@ def filter_profile_data(profile_data):
         return {"error": f"Failed to filter profile data: {str(e)}"}
 
 def get_profile_data(username):
-    proxies, proxy_type = get_proxy_list()
+    proxies = get_proxy_list()
     if not proxies:
         return {"error": "Failed to get proxy list"}
     
@@ -74,7 +73,7 @@ def get_profile_data(username):
         "Referrer-Policy": "strict-origin-when-cross-origin"
     }
 
-    for proxy in proxies:
+    for proxy, proxy_type in proxies:
         try:
             response = requests.get(
                 f"https://www.instagram.com/api/v1/users/web_profile_info/?username={username}",
