@@ -26,18 +26,18 @@
 
 ![image](https://github.com/user-attachments/assets/bcdde58d-8e2e-4864-8959-c472830ea46c)
 
-## How to Obtain Auth Token
+## How to Obtain SessionID
 
 1. Go to [Instagram's website](https://www.instagram.com/)
 2. Log into your account
 3. Open the Developer Tools by pressing `F12`
 4. Navigate to the **Application** tab, then select **Storage** > **Cookies**
-5. Find and copy the `sessionid` value or use the browser extension [Instagram.com SessionID Grabber](
+5. Find and copy the `sessionid` value or use the browser extension [Instagram.com SessionID Grabber](https://github.com/afkarxyz/Instagram-Media-Batch-Downloader/releases/download/v1.4/Instagram.com.SessionID.Grabber.zip)
 
-> Instagram.com sessionid Grabber
+> Instagram.com SessionID Grabber
 
 ![image](https://github.com/user-attachments/assets/f4c4c313-cb19-4840-a331-a47bb92ab603)
 
 > Developer Tools
 
-![image](https://github.com/user-attachments/assets/01f03731-f397-42c0-9d73-2c7bbe7a5712)
+![image](https://github.com/user-attachments/assets/4787ec47-b312-43e0-8b30-366f7d4cf99c)
