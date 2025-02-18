@@ -9,21 +9,35 @@
 #
 
 > [!Warning]
-> - If the download fails and the error `HttpError: '401 Unauthorized...'` appears, please try downloading it again.
-> - Media from **private accounts** cannot be downloaded.
+> Media from **private accounts** cannot be downloaded.
 
-### [Download](https://github.com/afkarxyz/Instagram-Media-Batch-Downloader/releases/download/v1.3/InstagramMediaBatchDownloader.exe)
+### [Download](https://github.com/afkarxyz/Instagram-Media-Batch-Downloader/releases/download/v1.4/InstagramMediaBatchDownloader.exe)
 
 ## Features
 
 - Uses the powerful `gallery-dl` library, similar to `yt-dlp`  
 - Download images and videos in original quality
-- Does not require cookies
 
 ## Screenshots
 
-![image](https://github.com/user-attachments/assets/9f573fa3-ee27-4139-8a2b-843d0d0cc7d2)
+![image](https://github.com/user-attachments/assets/156957f1-fb89-4742-8845-822fb4b5322e)
 
-![image](https://github.com/user-attachments/assets/7d6138b7-2e22-41f8-b35c-2a1c4ebdbb59)
+![image](https://github.com/user-attachments/assets/6b31da2d-650d-4da2-8bbc-5a938523a885)
 
-![image](https://github.com/user-attachments/assets/cdcb6e58-d8ef-4e10-9b37-d1fe42de8fa3)
+![image](https://github.com/user-attachments/assets/bcdde58d-8e2e-4864-8959-c472830ea46c)
+
+## How to Obtain Auth Token
+
+1. Go to [Instagram's website](https://www.instagram.com/)
+2. Log into your account
+3. Open the Developer Tools by pressing `F12`
+4. Navigate to the **Application** tab, then select **Storage** > **Cookies**
+5. Find and copy the `sessionid` value or use the browser extension [Instagram.com SessionID Grabber](
+
+> Instagram.com sessionid Grabber
+
+![image](https://github.com/user-attachments/assets/f4c4c313-cb19-4840-a331-a47bb92ab603)
+
+> Developer Tools
+
+![image](https://github.com/user-attachments/assets/01f03731-f397-42c0-9d73-2c7bbe7a5712)
