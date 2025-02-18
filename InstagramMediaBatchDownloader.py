@@ -1,14 +1,15 @@
 import sys
 import os
+import requests
 import asyncio
 import aiohttp
 import subprocess
 from pathlib import Path
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                             QHBoxLayout, QLabel, QLineEdit, QPushButton, 
-                            QFileDialog, QRadioButton)
-from PyQt6.QtCore import QThread, pyqtSignal, Qt, QSettings
-from PyQt6.QtGui import QIcon, QPixmap, QCursor, QPainter, QPainterPath
+                            QFileDialog, QRadioButton, QCheckBox, QDialog, QDialogButtonBox)
+from PyQt6.QtCore import QThread, pyqtSignal, Qt, QSettings, QTimer, QUrl
+from PyQt6.QtGui import QIcon, QPixmap, QCursor, QPainter, QPainterPath, QDesktopServices
 from getMetadata import get_profile_data
 from gallery_dl import job, config
 
@@ -60,24 +61,39 @@ class MediaDownloader(QThread):
     error = pyqtSignal(str)
     status_update = pyqtSignal(str)
 
-    def __init__(self, username, output_dir, config_filename, total_posts):
+    def __init__(self, username, output_dir, config_filename, total_posts, cookie):
         super().__init__()
         self.username = username
         self.output_dir = output_dir
         self.config_filename = config_filename
         self.total_posts = total_posts
+        self.cookie = cookie
         self.download_count = 0
         self.output_path = os.path.join(output_dir, username)
+        self.error_message = None
 
     class OutputRedirector:
-        def __init__(self, callback, output_path):
+        def __init__(self, callback, output_path, error_callback):
             self.callback = callback
             self.output_path = output_path
+            self.error_callback = error_callback
+            self.buffer = ""
 
         def write(self, text):
-            current_total = len([f for f in os.listdir(self.output_path) 
-                               if os.path.isfile(os.path.join(self.output_path, f))]) if os.path.exists(self.output_path) else 0
-            self.callback(f"Downloaded {current_total} files... {text.strip()}")
+            if text.strip():
+                if "HttpError" in text or "error" in text.lower() or "failed" in text.lower():
+                    self.error_callback(text.strip())
+                    return
+
+                if os.path.exists(self.output_path):
+                    try:
+                        current_total = len([f for f in os.listdir(self.output_path) 
+                                        if os.path.isfile(os.path.join(self.output_path, f))])
+                        self.callback(f"Downloaded {current_total} files... {text.strip()}")
+                    except:
+                        self.callback(text.strip())
+                else:
+                    self.callback(text.strip())
 
         def flush(self):
             pass
@@ -88,15 +104,32 @@ class MediaDownloader(QThread):
             return len(files)
         return 0
 
+    def capture_error(self, error_text):
+        self.error_message = error_text
+        self.error.emit(error_text)
+
     def run(self):
         try:
             config.set((), "directory", ["{username}"])
             config.set((), "base-directory", self.output_dir)
             config.set((), "filename", self.config_filename)
             
+            if self.cookie:
+                config.set(("extractor", "instagram"), "cookies", {
+                    "sessionid": self.cookie
+                })
+            
             original_stdout = sys.stdout
-            redirector = self.OutputRedirector(lambda text: self.status_update.emit(text.strip()), self.output_path)
+            original_stderr = sys.stderr
+            
+            redirector = self.OutputRedirector(
+                lambda text: self.status_update.emit(text.strip()),
+                self.output_path,
+                self.capture_error
+            )
+            
             sys.stdout = redirector
+            sys.stderr = redirector
             
             try:
                 url = f"https://www.instagram.com/{self.username}/posts"
@@ -104,18 +137,63 @@ class MediaDownloader(QThread):
                 
                 if result == 0:
                     final_count = self.count_downloaded_files()
-                    self.finished.emit(f"Downloaded {final_count} files...")
+                    self.finished.emit(f"Downloaded {final_count} files successfully")
+                elif self.error_message:
+                    self.error.emit(self.error_message)
                 else:
-                    self.error.emit("Download failed")
+                    self.error.emit(f"Download failed with unknown error")
+                    
+            except Exception as e:
+                error_msg = str(e)
+                if not self.error_message:
+                    self.error.emit(error_msg)
             finally:
                 sys.stdout = original_stdout
+                sys.stderr = original_stderr
                 
         except Exception as e:
-            self.error.emit(str(e))
+            if not self.error_message:
+                self.error.emit(str(e))
 
+class UpdateDialog(QDialog):
+    def __init__(self, current_version, new_version, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Update Available")
+        self.setFixedWidth(400)
+        self.setModal(True)
+
+        layout = QVBoxLayout()
+
+        message = QLabel(f"A new version of Instagram Media Batch Downloader is available!\n\n"
+                        f"Current version: v{current_version}\n"
+                        f"New version: v{new_version}")
+        message.setWordWrap(True)
+        layout.addWidget(message)
+
+        self.disable_check = QCheckBox("Turn off update checking")
+        self.disable_check.setCursor(Qt.CursorShape.PointingHandCursor)
+        layout.addWidget(self.disable_check)
+
+        button_box = QDialogButtonBox()
+        self.update_button = QPushButton("Update")
+        self.update_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        
+        button_box.addButton(self.update_button, QDialogButtonBox.ButtonRole.AcceptRole)
+        button_box.addButton(self.cancel_button, QDialogButtonBox.ButtonRole.RejectRole)
+        
+        layout.addWidget(button_box)
+
+        self.setLayout(layout)
+
+        self.update_button.clicked.connect(self.accept)
+        self.cancel_button.clicked.connect(self.reject)
+        
 class InstagramMediaDownloaderGUI(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.current_version = "1.4" 
         self.setWindowTitle("Instagram Media Batch Downloader")
         
         icon_path = os.path.join(os.path.dirname(__file__), "icon.svg")
@@ -130,10 +208,35 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         
         self.media_info = None
         self.settings = QSettings('InstagramMediaDownloader', 'Settings')
+        self.check_for_updates = self.settings.value('check_for_updates', True, type=bool)
         
         self.init_ui()
         self.load_settings()
         self.setup_auto_save()
+        
+        if self.check_for_updates:
+            QTimer.singleShot(0, self.check_updates)
+
+    def check_updates(self):
+        try:
+            response = requests.get("https://raw.githubusercontent.com/afkarxyz/Instagram-Media-Batch-Downloader/refs/heads/main/version.json")
+            if response.status_code == 200:
+                data = response.json()
+                new_version = data.get("version")
+                
+                if new_version and new_version != self.current_version:
+                    dialog = UpdateDialog(self.current_version, new_version, self)
+                    result = dialog.exec()
+                    
+                    if dialog.disable_check.isChecked():
+                        self.settings.setValue('check_for_updates', False)
+                        self.check_for_updates = False
+                    
+                    if result == QDialog.DialogCode.Accepted:
+                        QDesktopServices.openUrl(QUrl("https://github.com/afkarxyz/Instagram-Media-Batch-Downloader/releases"))
+                        
+        except Exception as e:
+            print(f"Error checking for updates: {e}")
 
     def init_ui(self):
         central_widget = QWidget()
@@ -185,6 +288,18 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         dir_layout.addWidget(self.dir_input)
         dir_layout.addWidget(self.dir_button)
         input_layout.addLayout(dir_layout)
+        
+        cookie_layout = QHBoxLayout()
+        cookie_label = QLabel("Cookie:")
+        cookie_label.setFixedWidth(100)
+        
+        self.cookie_input = QLineEdit()
+        self.cookie_input.setPlaceholderText("Enter your Instagram sessionid cookie")
+        self.cookie_input.setClearButtonEnabled(True)
+        
+        cookie_layout.addWidget(cookie_label)
+        cookie_layout.addWidget(self.cookie_input)
+        input_layout.addLayout(cookie_layout)
 
         format_layout = QHBoxLayout()
         format_label = QLabel("Filename Format:")
@@ -332,11 +447,13 @@ class InstagramMediaDownloaderGUI(QMainWindow):
     def setup_auto_save(self):
         self.url_input.textChanged.connect(self.auto_save_settings)
         self.dir_input.textChanged.connect(self.auto_save_settings)
+        self.cookie_input.textChanged.connect(self.auto_save_settings)
         self.format_username.toggled.connect(self.auto_save_settings)
     
     def auto_save_settings(self):
         self.settings.setValue('url_input', self.url_input.text())
         self.settings.setValue('output_dir', self.dir_input.text())
+        self.settings.setValue('cookie_input', self.cookie_input.text())
         self.settings.setValue('filename_format',
                              'username_date' if self.format_username.isChecked() else 'date_username')
         self.settings.sync()
@@ -344,6 +461,7 @@ class InstagramMediaDownloaderGUI(QMainWindow):
     def load_settings(self):
         self.url_input.setText(self.settings.value('url_input', '', str))
         self.dir_input.setText(self.settings.value('output_dir', self.default_pictures_dir, str))
+        self.cookie_input.setText(self.settings.value('cookie_input', '', str))
         
         format_setting = self.settings.value('filename_format', 'username_date')
         self.format_username.setChecked(format_setting == 'username_date')
@@ -402,7 +520,7 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.following_label.setText(f"<b>Following:</b> {following:,}")
         self.posts_label.setText(f"<b>Posts:</b> {posts:,}")
 
-        self.status_label.setText("Successfully fetched profile info...")
+        self.status_label.setText("Successfully fetched profile info")
 
         profile_image_url = info['profile_image']
         self.image_downloader = ImageDownloader(profile_image_url)
@@ -456,6 +574,7 @@ class InstagramMediaDownloaderGUI(QMainWindow):
             username = username.split("/")[-2]
             
         output_dir = self.dir_input.text().strip() or self.default_pictures_dir
+        cookie = self.cookie_input.text().strip()
         
         filename_format = "username_date" if self.format_username.isChecked() else "date_username"
         if filename_format == "username_date":
@@ -464,7 +583,7 @@ class InstagramMediaDownloaderGUI(QMainWindow):
             config_filename = "{date}_{username}_{num}.{extension}"
 
         total_posts = self.media_info['statuses_count']
-        self.worker = MediaDownloader(username, output_dir, config_filename, total_posts)
+        self.worker = MediaDownloader(username, output_dir, config_filename, total_posts, cookie)
         self.worker.finished.connect(self.download_finished)
         self.worker.error.connect(self.download_error)
         self.worker.status_update.connect(self.status_label.setText)
