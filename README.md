@@ -15,8 +15,8 @@
 
 ## ✨ Features
 
-- Uses the powerful `gallery-dl` library, similar to `yt-dlp`  
-- Download images and videos in original quality
+- Powered by `gallery-dl`, similar to `yt-dlp` 
+- Downloads in original quality
 
 ## 🖼️ Screenshots
 
