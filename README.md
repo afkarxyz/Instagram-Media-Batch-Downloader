@@ -13,12 +13,12 @@
 
 ### [Download](https://github.com/afkarxyz/Instagram-Media-Batch-Downloader/releases/download/v1.5/InstagramMediaBatchDownloader.exe)
 
-## Features
+## ✨ Features
 
 - Uses the powerful `gallery-dl` library, similar to `yt-dlp`  
 - Download images and videos in original quality
 
-## Screenshots
+## 🖼️ Screenshots
 
 ![image](https://github.com/user-attachments/assets/156957f1-fb89-4742-8845-822fb4b5322e)
 
@@ -26,7 +26,7 @@
 
 ![image](https://github.com/user-attachments/assets/bcdde58d-8e2e-4864-8959-c472830ea46c)
 
-## How to Obtain SessionID
+## 🔑 How to Obtain SessionID
 
 1. Go to [Instagram's website](https://www.instagram.com/)
 2. Log into your account
