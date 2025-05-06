@@ -8,7 +8,7 @@
 
 #
 
-### [Download](https://github.com/afkarxyz/Instagram-Media-Batch-Downloader/releases/download/v1.5/InstagramMediaBatchDownloader.exe)
+### [Download](https://github.com/afkarxyz/Instagram-Media-Batch-Downloader/releases/download/v1.6/InstagramMediaBatchDownloader.exe)
 
 > [!Note]
 Media from **private accounts** cannot be downloaded.
