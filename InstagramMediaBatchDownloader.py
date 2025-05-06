@@ -194,7 +194,7 @@ class UpdateDialog(QDialog):
 class InstagramMediaDownloaderGUI(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.current_version = "1.5" 
+        self.current_version = "1.6" 
         self.setWindowTitle("Instagram Media Batch Downloader")
         
         icon_path = os.path.join(os.path.dirname(__file__), "icon.svg")
@@ -295,7 +295,7 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         cookie_label.setFixedWidth(100)
         
         self.cookie_input = QLineEdit()
-        self.cookie_input.setPlaceholderText("Enter your Instagram sessionid cookie")
+        self.cookie_input.setPlaceholderText("Enter your Instagram SessionID if the download fails")
         self.cookie_input.setClearButtonEnabled(True)
         
         cookie_layout.addWidget(cookie_label)
@@ -417,6 +417,9 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         status_layout = QHBoxLayout(status_widget)
         status_layout.setContentsMargins(0, 0, 0, 0)
         
+        self.version_label = QLabel(f"v1.6 (gallery-dl v1.29.6)")
+        status_layout.addWidget(self.version_label)
+        
         self.status_label = QLabel("")
         status_layout.addWidget(self.status_label, stretch=1)
         
@@ -484,10 +487,18 @@ class InstagramMediaDownloaderGUI(QMainWindow):
             else:
                 subprocess.run(['xdg-open', output_dir])
 
+    def set_status_text(self, text):
+        """Set status text and hide/show version label accordingly"""
+        self.status_label.setText(text)
+        if text:
+            self.version_label.hide()
+        else:
+            self.version_label.show()
+
     def fetch_metadata(self):
         username = self.url_input.text().strip()
         if not username:
-            self.status_label.setText("Please enter a username or URL")
+            self.set_status_text("Please enter a username or URL")
             return
 
         if "instagram.com/" in username:
@@ -496,7 +507,7 @@ class InstagramMediaDownloaderGUI(QMainWindow):
             self.url_input.setText(username)
 
         self.fetch_button.setEnabled(False)
-        self.status_label.setText("Fetching profile information...")
+        self.set_status_text("Fetching profile information...")
         
         self.fetcher = MetadataFetcher(username)
         self.fetcher.finished.connect(self.handle_profile_info)
@@ -521,7 +532,7 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.following_label.setText(f"<b>Following:</b> {following:,}")
         self.posts_label.setText(f"<b>Posts:</b> {posts:,}")
 
-        self.status_label.setText("Successfully fetched profile info")
+        self.set_status_text("Successfully fetched profile info")
 
         profile_image_url = info['profile_image']
         self.image_downloader = ImageDownloader(profile_image_url)
@@ -559,16 +570,16 @@ class InstagramMediaDownloaderGUI(QMainWindow):
 
     def handle_fetch_error(self, error):
         self.fetch_button.setEnabled(True)
-        self.status_label.setText(f"Error fetching profile info: {error}")
+        self.set_status_text(f"Error fetching profile info: {error}")
 
     def start_download(self):
         if not self.media_info:
-            self.status_label.setText("Please fetch profile information first")
+            self.set_status_text("Please fetch profile information first")
             return
 
         self.download_button.hide()
         self.cancel_button.hide()
-        self.status_label.setText("Starting download...")
+        self.set_status_text("Starting download...")
 
         username = self.url_input.text().strip()
         if "instagram.com/" in username:
@@ -587,11 +598,11 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.worker = MediaDownloader(username, output_dir, config_filename, total_posts, cookie)
         self.worker.finished.connect(self.download_finished)
         self.worker.error.connect(self.download_error)
-        self.worker.status_update.connect(self.status_label.setText)
+        self.worker.status_update.connect(self.set_status_text)
         self.worker.start()
 
     def download_finished(self, message):
-        self.status_label.setText(message)
+        self.set_status_text(message)
         self.open_button.show()
         self.download_button.setText("Clear")
         self.download_button.clicked.disconnect()
@@ -606,7 +617,7 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.download_button.hide()
         self.cancel_button.hide()
         self.open_button.hide()
-        self.status_label.clear()
+        self.set_status_text("")
         self.media_info = None
         self.update_button.show()
         self.fetch_button.setEnabled(True)
@@ -615,7 +626,7 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.download_button.clicked.connect(self.start_download)
 
     def download_error(self, error_message):
-        self.status_label.setText(f"Download error: {error_message}")
+        self.set_status_text(f"Download error: {error_message}")
         self.download_button.setText("Retry")
         self.download_button.show()
         self.cancel_button.show()
@@ -626,7 +637,7 @@ class InstagramMediaDownloaderGUI(QMainWindow):
         self.download_button.hide()
         self.cancel_button.hide()
         self.open_button.hide()
-        self.status_label.clear()
+        self.set_status_text("")
         self.media_info = None
         self.update_button.show()
         self.fetch_button.setEnabled(True)
