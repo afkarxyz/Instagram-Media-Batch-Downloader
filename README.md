@@ -26,6 +26,9 @@ Media from **private accounts** cannot be downloaded.
 
 ![image](https://github.com/user-attachments/assets/bcdde58d-8e2e-4864-8959-c472830ea46c)
 
+> [!Tip]
+You can try downloading **without a cookie** first. If it fails, then enter your `sessionid` cookie to proceed.
+
 ## 🔑 How to Obtain SessionID
 
 1. Go to [Instagram's website](https://www.instagram.com/)
