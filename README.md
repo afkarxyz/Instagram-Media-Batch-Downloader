@@ -6,9 +6,9 @@
 <b>Instagram Media Batch Downloader</b> is a GUI tool that allows users to download all media, including images and videos, in their original quality from Instagram accounts using <code>gallery-dl</code>
 </div>
 
-#
-
 ### [Download](https://github.com/afkarxyz/Instagram-Media-Batch-Downloader/releases/download/v1.6/InstagramMediaBatchDownloader.exe)
+
+#
 
 > [!Note]
 Media from **private accounts** cannot be downloaded.
