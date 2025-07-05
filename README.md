@@ -26,15 +26,12 @@ Media from **private accounts** cannot be downloaded.
 
 ![image](https://github.com/user-attachments/assets/bcdde58d-8e2e-4864-8959-c472830ea46c)
 
-> [!Tip]
-You can try downloading **without a cookie** first. If it fails, then enter your `sessionid` cookie to proceed.
-
-## 🔑 How to Obtain SessionID
+## 🔑 How to Obtain Session ID
 
 1. Go to [Instagram's website](https://www.instagram.com/)
 2. Log into your account
 3. Open the Developer Tools by pressing `F12`
-4. Navigate to the **Application** tab, then select **Storage** > **Cookies**
+4. Navigate to the **Application** tab, then select **Storage → Cookies**
 5. Find and copy the `sessionid` value or use the browser extension [Instagram.com SessionID Grabber](https://github.com/afkarxyz/Instagram-Media-Batch-Downloader/releases/download/v1.4/Instagram.com.SessionID.Grabber.zip)
 
 > Instagram.com SessionID Grabber
