@@ -8,23 +8,22 @@
 
 ### [Download](https://github.com/afkarxyz/Instagram-Media-Batch-Downloader/releases/download/v1.6/InstagramMediaBatchDownloader.exe)
 
-#
-
-> [!Note]
-Media from **private accounts** cannot be downloaded.
-
 ## ✨ Features
 
-- Powered by `gallery-dl`, similar to `yt-dlp` 
-- Downloads in original quality
+- Powered by `gallery-dl`, similar to `yt-dlp`
+- **Bulk download**: Download multiple items at once
+- Downloads at original quality
 
 ## 🖼️ Screenshots
 
-![image](https://github.com/user-attachments/assets/156957f1-fb89-4742-8845-822fb4b5322e)
+![image](https://github.com/user-attachments/assets/061a9901-e246-4101-8fb9-ea07376a3583)
 
-![image](https://github.com/user-attachments/assets/6b31da2d-650d-4da2-8bbc-5a938523a885)
+![image](https://github.com/user-attachments/assets/66070d86-8428-4b24-9a04-2f84fed99a81)
 
-![image](https://github.com/user-attachments/assets/bcdde58d-8e2e-4864-8959-c472830ea46c)
+![image](https://github.com/user-attachments/assets/4ac18733-cdeb-477e-b738-e26ed1a53153)
+
+> [!Tip]
+You can try downloading **without a cookie** first. If it fails, then enter your `sessionid` cookie to proceed.
 
 ## 🔑 How to Obtain Session ID
 
