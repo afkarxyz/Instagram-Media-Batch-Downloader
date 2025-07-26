@@ -16,11 +16,9 @@
 
 ## 🖼️ Screenshots
 
-![image](https://github.com/user-attachments/assets/061a9901-e246-4101-8fb9-ea07376a3583)
+![image](https://github.com/user-attachments/assets/50955fcb-8eef-493b-8986-bf00b8674be7)
 
-![image](https://github.com/user-attachments/assets/66070d86-8428-4b24-9a04-2f84fed99a81)
-
-![image](https://github.com/user-attachments/assets/4ac18733-cdeb-477e-b738-e26ed1a53153)
+![image](https://github.com/user-attachments/assets/0442222c-23a1-4390-9918-5e92928f1315)
 
 > [!Tip]
 You can try downloading **without a cookie** first. If it fails, then enter your `sessionid` cookie to proceed.
